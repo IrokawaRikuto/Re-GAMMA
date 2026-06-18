@@ -1,0 +1,39 @@
+# Stage 1Map
+
+# Layer Y=0
+..................
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+..................
+
+# Layer Y=1
+EEEEEEEEEEEEEEEEEE
+W................w
+W................w
+W................w
+W................w 
+W.R..............w
+WWWWWWWWWWWWWWWWWW
+
+
+# Layer Y=2
+EEEEEEEEEEEEEEEEEE
+W................W
+W................W
+W................W
+W................W 
+W................W
+WWWWWWWWWWWWWWWWWW
+
+# Layer Y=3
+EEEEEEEEEEEEEEEEEE
+W................W
+W................W
+W................W
+W................W 
+W................W
+WWWWWWWWWWWWWWWWWW
+

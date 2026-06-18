@@ -1,0 +1,327 @@
+/*==============================================================================
+
+   シェーダー [shader.cpp]
+														 Author : Youhei Sato
+														 Date   : 2025/05/15
+--------------------------------------------------------------------------------
+
+==============================================================================*/
+#include <d3d11.h>
+#include <DirectXMath.h>
+using namespace DirectX;
+#include "direct3d.h"
+#include "debug_ostream.h"
+#include "shader.h"
+#include <fstream>
+
+
+
+static ID3D11VertexShader* g_pVertexShader = nullptr;//頂点シェーダー
+static ID3D11InputLayout* g_pInputLayout = nullptr;//頂点レイアウト
+static ID3D11Buffer* g_pVSConstantBuffer = nullptr;//定数バッファ1個
+static ID3D11PixelShader* g_pPixelShader = nullptr;//ピクセルシェーダー
+
+static ID3D11Buffer* g_pLightConstantBuffer = nullptr;//定数バッファ1個
+static ID3D11Buffer* g_pWorldConstantBuffer = nullptr;//定数バッファ1個
+
+// 注意！初期化で外部から設定されるもの。Release不要。
+static ID3D11Device* g_pDevice = nullptr;
+static ID3D11DeviceContext* g_pContext = nullptr;
+
+static ID3D11Buffer* g_pShadowMatrixBuffer = nullptr;
+static ID3D11Buffer* g_pShadowLightBuffer = nullptr;
+
+static ID3D11Buffer* g_pBoneBuffer = nullptr;
+static ID3D11Buffer* g_pIrisConstantBuffer = nullptr;
+
+bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+{
+	HRESULT hr; // 戻り値格納用
+
+	// デバイスとデバイスコンテキストのチェック
+	if (!pDevice || !pContext) {
+		hal::dout << "Shader_Initialize() : 与えられたデバイスかコンテキストが不正です" << std::endl;
+		return false;
+	}
+
+	// デバイスとデバイスコンテキストの保存
+	g_pDevice = pDevice;
+	g_pContext = pContext;
+
+
+	// 事前コンパイル済み頂点シェーダーの読み込み
+	//csoはhlslファイルの実行形式ファイル
+	std::ifstream ifs_vs("shader_vertex_2d.cso", std::ios::binary);
+
+	if (!ifs_vs) {
+		MessageBox(nullptr, "頂点シェーダーの読み込みに失敗しました\n\nshader_vertex_2d.cso", "エラー", MB_OK);
+		return false;
+	}
+
+	// ファイルサイズを取得
+	ifs_vs.seekg(0, std::ios::end); // ファイルポインタを末尾に移動
+	std::streamsize filesize = ifs_vs.tellg(); // ファイルポインタの位置を取得（つまりファイルサイズ）
+	ifs_vs.seekg(0, std::ios::beg); // ファイルポインタを先頭に戻す
+
+	// バイナリデータを格納するためのバッファを確保
+	unsigned char* vsbinary_pointer = new unsigned char[filesize];
+
+	ifs_vs.read((char*)vsbinary_pointer, filesize); // バイナリデータを読み込む
+	ifs_vs.close(); // ファイルを閉じる
+
+	// 頂点シェーダーの作成
+	hr = g_pDevice->CreateVertexShader(vsbinary_pointer, filesize, nullptr, &g_pVertexShader);
+
+	if (FAILED(hr)) {
+		hal::dout << "Shader_Initialize() : 頂点シェーダーの作成に失敗しました" << std::endl;
+		delete[] vsbinary_pointer; // メモリリークしないようにバイナリデータのバッファを解放
+		return false;
+	}
+
+
+	// 頂点レイアウトの定義<<<<<<<NORMAL追加
+	D3D11_INPUT_ELEMENT_DESC layout[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BONEINDEX",  0, DXGI_FORMAT_R32G32B32A32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BONEWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	UINT num_elements = ARRAYSIZE(layout); // 配列の要素数を取得
+
+	// 頂点レイアウトの作成
+	hr = g_pDevice->CreateInputLayout(layout, num_elements, vsbinary_pointer, filesize, &g_pInputLayout);
+
+	delete[] vsbinary_pointer; // バイナリデータのバッファを解放
+
+	if (FAILED(hr)) {
+		hal::dout << "Shader_Initialize() : 頂点レイアウトの作成に失敗しました" << std::endl;
+		return false;
+	}
+
+
+	// 頂点シェーダー用定数バッファの作成
+	D3D11_BUFFER_DESC buffer_desc{};
+	buffer_desc.ByteWidth = sizeof(XMFLOAT4X4); // バッファのサイズ //<<<<<<<<<<XMFLOAT4X4に変更
+	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; // バインドフラグ
+
+	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pVSConstantBuffer);
+	g_pContext->VSSetConstantBuffers(0, 1, &g_pVSConstantBuffer);
+
+	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pWorldConstantBuffer);
+	g_pContext->VSSetConstantBuffers(1, 1, &g_pWorldConstantBuffer);
+
+	buffer_desc.ByteWidth = sizeof(LIGHT);
+	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pLightConstantBuffer);
+	g_pContext->VSSetConstantBuffers(2, 1, &g_pLightConstantBuffer);
+	g_pContext->PSSetConstantBuffers(2, 1, &g_pLightConstantBuffer);
+
+	buffer_desc.ByteWidth = sizeof(XMFLOAT4X4);
+	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pShadowMatrixBuffer);
+
+	buffer_desc.ByteWidth = sizeof(XMFLOAT4X4) * 2;
+	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pShadowLightBuffer);
+
+	{
+		D3D11_BUFFER_DESC bd{};
+		bd.Usage = D3D11_USAGE_DYNAMIC;
+		bd.ByteWidth = sizeof(XMMATRIX) * MAX_BONES;
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+		Direct3D_GetDevice()->CreateBuffer(&bd, nullptr, &g_pBoneBuffer);
+	}
+
+	{
+		D3D11_BUFFER_DESC bd{};
+		bd.ByteWidth = 16; // float2 center + float radius + float active
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		g_pDevice->CreateBuffer(&bd, nullptr, &g_pIrisConstantBuffer);
+		// Bind once; updated each frame via Shader_SetIris.
+		g_pContext->PSSetConstantBuffers(6, 1, &g_pIrisConstantBuffer);
+	}
+
+	//{
+	//	D3D11_BUFFER_DESC desc = {};
+	//	desc.ByteWidth = sizeof(XMFLOAT4X4);
+	//	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//	g_pDevice->CreateBuffer(&desc, nullptr, &g_pShadowMatrixBuffer);
+	//}
+
+	// 事前コンパイル済みピクセルシェーダーの読み込み
+	std::ifstream ifs_ps("shader_pixel_2d.cso", std::ios::binary);
+	if (!ifs_ps) {
+		MessageBox(nullptr, "ピクセルシェーダーの読み込みに失敗しました\n\nshader_pixel_2d.cso", "エラー", MB_OK);
+		return false;
+	}
+
+	ifs_ps.seekg(0, std::ios::end);
+	filesize = ifs_ps.tellg();
+	ifs_ps.seekg(0, std::ios::beg);
+
+	unsigned char* psbinary_pointer = new unsigned char[filesize];
+	ifs_ps.read((char*)psbinary_pointer, filesize);
+	ifs_ps.close();
+
+	// ピクセルシェーダーの作成
+	hr = g_pDevice->CreatePixelShader(psbinary_pointer, filesize, nullptr, &g_pPixelShader);
+
+	delete[] psbinary_pointer; // バイナリデータのバッファを解放
+
+	if (FAILED(hr)) {
+		hal::dout << "Shader_Initialize() : ピクセルシェーダーの作成に失敗しました" << std::endl;
+		return false;
+	}
+
+	return true;
+}
+
+void Shader_Finalize()
+{
+	SAFE_RELEASE(g_pPixelShader);
+	SAFE_RELEASE(g_pVSConstantBuffer);
+	SAFE_RELEASE(g_pInputLayout);
+	SAFE_RELEASE(g_pVertexShader);
+	SAFE_RELEASE(g_pLightConstantBuffer);
+	SAFE_RELEASE(g_pWorldConstantBuffer);
+	SAFE_RELEASE(g_pShadowMatrixBuffer);
+	SAFE_RELEASE(g_pShadowLightBuffer);
+	SAFE_RELEASE(g_pBoneBuffer);
+	SAFE_RELEASE(g_pIrisConstantBuffer);
+}
+
+void Shader_SetMatrix(const DirectX::XMMATRIX& matrix)
+{
+	// 定数バッファ格納用行列の構造体を定義
+	XMFLOAT4X4 transpose;
+
+	// 行列を転置して定数バッファ格納用行列に変換
+	XMStoreFloat4x4(&transpose, XMMatrixTranspose(matrix));
+
+	// 定数バッファに行列をセット
+	g_pContext->UpdateSubresource(g_pVSConstantBuffer, 0, nullptr, &transpose, 0, 0);
+}
+
+void Shader_SetWorldMatrix(const DirectX::XMMATRIX& matrix)
+{
+	// 定数バッファ格納用行列の構造体を定義
+	XMFLOAT4X4 transpose;
+
+	// 行列を転置して定数バッファ格納用行列に変換
+	XMStoreFloat4x4(&transpose, XMMatrixTranspose(matrix));
+
+	// 定数バッファに行列をセット
+	g_pContext->UpdateSubresource(g_pWorldConstantBuffer, 0, nullptr, &transpose, 0, 0);
+}
+void Shader_SetLight(LIGHT light)
+{
+	// 定数バッファにLIGHTをセット
+	g_pContext->UpdateSubresource(g_pLightConstantBuffer, 0, nullptr, &light, 0, 0);
+}
+
+// Set shadow matrix:
+void Shader_SetShadowMatrix(const DirectX::XMMATRIX& mat)
+{
+	XMFLOAT4X4 data;
+	XMStoreFloat4x4(&data, XMMatrixTranspose(mat));
+	g_pContext->UpdateSubresource(g_pShadowMatrixBuffer, 0, nullptr, &data, 0, 0);
+	g_pContext->VSSetConstantBuffers(3, 1, &g_pShadowMatrixBuffer);
+}
+// Bind shadow map SRV to t1:
+void Shader_SetShadowMap(ID3D11ShaderResourceView* shadowSRV)
+{
+	g_pContext->PSSetShaderResources(1, 1, &shadowSRV); // t1
+}
+// Bind shadow sampler to s1:
+void Shader_SetShadowSampler(ID3D11SamplerState* sampler)
+{
+	g_pContext->PSSetSamplers(1, 1, &sampler); // s1
+}
+
+void Shader_SetShadowLightData(const DirectX::XMFLOAT3& pos, float radius, float intensity, float shadowPassMode)
+{
+	struct ShadowLightData
+	{
+		DirectX::XMFLOAT3 ShadowLightPos;
+		float ShadowPassMode;
+		float ShadowRadius;
+		DirectX::XMFLOAT3 pad2;
+		float ShadowIntensity;
+	};
+
+	ShadowLightData data{};
+	data.ShadowLightPos = pos;
+	data.ShadowPassMode = shadowPassMode;
+	data.ShadowRadius = radius;
+	data.pad2 = DirectX::XMFLOAT3(0, 0, 0);
+	data.ShadowIntensity = intensity;
+
+	g_pContext->UpdateSubresource(g_pShadowLightBuffer, 0, nullptr, &data, 0, 0);
+	g_pContext->PSSetConstantBuffers(4, 1, &g_pShadowLightBuffer);
+}
+
+void Shader_SetBones(MODEL* model)
+{
+	XMMATRIX boneMatrices[MAX_BONES];
+
+	for (int i = 0; i < 100; i++)
+	{
+		boneMatrices[i] = XMMatrixIdentity();
+	}
+
+	UINT count = min((UINT)model->Bones.size(), 100u);
+
+	for (UINT i = 0; i < count; i++)
+	{
+		boneMatrices[i] =
+			XMMatrixTranspose(model->Bones[i].finalTransform);
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mapped{};
+	Direct3D_GetDeviceContext()->Map(
+		g_pBoneBuffer, 0,
+		D3D11_MAP_WRITE_DISCARD,
+		0, &mapped);
+
+	memcpy(mapped.pData, boneMatrices, sizeof(boneMatrices));
+
+	Direct3D_GetDeviceContext()->Unmap(g_pBoneBuffer, 0);
+
+	Direct3D_GetDeviceContext()->VSSetConstantBuffers(
+		5, 1, &g_pBoneBuffer);
+}
+
+void Shader_SetIris(const DirectX::XMFLOAT2& center, float radius, float active)
+{
+	struct IrisData
+	{
+		float cx;
+		float cy;
+		float radius;
+		float active;
+	};
+	IrisData d{};
+	d.cx = center.x;
+	d.cy = center.y;
+	d.radius = radius;
+	d.active = active;
+	g_pContext->UpdateSubresource(g_pIrisConstantBuffer, 0, nullptr, &d, 0, 0);
+	g_pContext->PSSetConstantBuffers(6, 1, &g_pIrisConstantBuffer);
+}
+
+void Shader_Begin()
+{
+	// 頂点シェーダーとピクセルシェーダーを描画パイプラインに設定
+	g_pContext->VSSetShader(g_pVertexShader, nullptr, 0);
+	g_pContext->PSSetShader(g_pPixelShader, nullptr, 0);
+
+	// 頂点レイアウトを描画パイプラインに設定
+	g_pContext->IASetInputLayout(g_pInputLayout);
+
+	// 定数バッファを描画パイプラインに設定
+	g_pContext->VSSetConstantBuffers(0, 1, &g_pVSConstantBuffer);
+}
