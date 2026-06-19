@@ -16,6 +16,8 @@ using namespace mu;
 
 #include "Bill_Board.h"
 #include "fade.h"
+#include "game_shadow.h"   // ball-light pos / spotlight dir for lit-wall gate
+#include <cmath>
 
 //=========================================================================================================
 // デバッグ
@@ -339,6 +341,34 @@ static bool GetSwitchTargetFromPlayer3D(SWITCH_TARGET* outT)
 				best.fieldIndex = (int)i;
 				best.face = face;
 				best.normal = normal;
+			}
+		}
+	}
+
+	// [FIX] Lit-wall gate: only allow the 3D->2D transform when the wall in
+	// front is inside the spotlight cone. This mirrors the cone test in
+	// shader_pixel_2d.hlsl (kSpotCosOuter must match the shader cosOuter) so
+	// the player can only enter shadow-mode on a wall that is actually lit.
+	// Skipped when the ball light is not a spotlight (Direction.w < 0.5).
+	if (best.fieldIndex >= 0)
+	{
+		const LIGHT& bl = GameShadow_BallLight().Light;
+		if (bl.Direction.w >= 0.5f)
+		{
+			const XMFLOAT3 lp = GameShadow_GetLightPos();
+			XMFLOAT3 toPx = { rayO.x + rayD.x * bestT - lp.x,
+			                  rayO.y + rayD.y * bestT - lp.y,
+			                  rayO.z + rayD.z * bestT - lp.z };
+			float lenPx = sqrtf(toPx.x*toPx.x + toPx.y*toPx.y + toPx.z*toPx.z);
+			float lenSp = sqrtf(bl.Direction.x*bl.Direction.x +
+			                    bl.Direction.y*bl.Direction.y +
+			                    bl.Direction.z*bl.Direction.z);
+			if (lenPx > 1e-4f && lenSp > 1e-4f)
+			{
+				float cosA = (toPx.x*bl.Direction.x + toPx.y*bl.Direction.y +
+				              toPx.z*bl.Direction.z) / (lenPx * lenSp);
+				const float kSpotCosOuter = 0.83f; // keep in sync with shader
+				if (cosA < kSpotCosOuter) return false; // wall not lit -> no switch
 			}
 		}
 	}

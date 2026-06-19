@@ -156,9 +156,12 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
         float3 spotDir = normalize(Light.Dir.xyz);
         float3 dirToPx = normalize(toPixel); // light -> pixel
         float cosA = dot(dirToPx, spotDir);
-        // ~57 deg outer half-angle, ~32 deg inner -> soft edge.
-        float cosOuter = 0.55f;
-        float cosInner = 0.85f;
+        // Crisp cone edge so the lit/shadow boundary is clearly visible.
+        // ~34 deg outer half-angle, ~28 deg inner -> narrow soft band.
+        // cosOuter must match kSpotCosOuter in PlayerModeSwitchManager.cpp
+        // (the CPU lit-wall transform gate).
+        float cosOuter = 0.83f;
+        float cosInner = 0.88f;
         spotFactor = smoothstep(cosOuter, cosInner, cosA);
     }
     att *= spotFactor;
