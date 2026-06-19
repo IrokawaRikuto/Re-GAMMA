@@ -113,6 +113,13 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;
 
 	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;
+
+	// [FIX] Clear the cinematic auto-drive flags on (re)init. The stage-clear
+	// cinematic sets isAuto / blockMovement and only clears them when it plays
+	// to completion. If it is ever interrupted, these would otherwise stay true
+	// and brick player control on the next playthrough.
+	g_Player3D.isAuto = false;
+	g_Player3D.blockMovement = false;
 }
 
 //=========================================================================================================

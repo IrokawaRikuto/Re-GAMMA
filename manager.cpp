@@ -79,11 +79,21 @@ void	Manager_Update()
 	}
 #endif // _DEBUG
 
-	// [FIX] Block all toggle-style input while a fade is in progress so the
-	// player can't open the pause menu, swap mouse modes, etc. mid-transition.
+	// [FIX] Block all toggle-style input while a transition is in progress so
+	// the player can't open the pause menu, swap mouse modes, etc. mid-cut.
+	// Three transition states all need to lock the menu:
+	//   - Fade (Input_IsGloballyLocked)
+	//   - Stage-clear cinematic: it is NOT a fade, so without this the player
+	//     could Esc out of the movie. Exiting mid-cinematic left the player
+	//     auto-driven (isAuto/blockMovement never cleared) and bricked the next
+	//     playthrough.
+	//   - Iris transition: the early shrink/full-close phases run before the
+	//     fade kicks in, so they would otherwise be an unlocked window too.
 	// Fade_Update still ticks at the bottom of this function so the fade
 	// itself keeps progressing.
-	const bool inputLocked = Input_IsGloballyLocked();
+	const bool inputLocked = Input_IsGloballyLocked()
+		|| StageClearCinematic_IsLocked()
+		|| Iris_IsActive();
 
 	static bool relativeMode = true;
 	bool suppressDelta = false;
