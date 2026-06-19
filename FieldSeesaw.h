@@ -30,8 +30,8 @@ struct SeesawParams
 
     SeesawParams()
         : tiltAngle(0.0f)
-        , maxTiltAngle(12.0f)
-        , tiltSpeed(60.0f)
+        , maxTiltAngle(24.0f)
+        , tiltSpeed(130.0f)
         , returnSpeed(0.0f)
         , boardLength(2.5f)
         , autoReturn(false)

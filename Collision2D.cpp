@@ -99,6 +99,10 @@ int Player2DField_Collision()
 
             if (fabsf(push.x) > 1e-8f || fabsf(push.y) > 1e-8f || fabsf(push.z) > 1e-8f)
             {
+                // [FIX] Side wall: do not let the MTV push the capsule UP (it
+                // popped the 2D player up vertical walls). Keep push.y only for
+                // floor/ceiling resolves (vertical normal).
+                if (fabsf(norm.y) < 0.7f) push.y = 0.0f;
                 capsule.center = capsule.center + push;
                 hitThisIter = true;
             }

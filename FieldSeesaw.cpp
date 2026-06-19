@@ -32,8 +32,8 @@ static const SeesawPartConfig SEESAW_PARTS[] =
 	// ベース
 	{
 		FIELD_SEESAW_1,
-		XMFLOAT3(0.0f, -0.2f, 0.0f),
-		XMFLOAT3(0.45f, 0.6f, 0.3f),
+		XMFLOAT3(0.0f, 0.15f, 0.0f),
+		XMFLOAT3(0.45f, 1.3f, 0.3f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		0.0f,
@@ -42,7 +42,7 @@ static const SeesawPartConfig SEESAW_PARTS[] =
 	// 板（傾く）
 	{
 		FIELD_SEESAW_2,
-		XMFLOAT3(0.0f, -0.22f, 0.0f),
+		XMFLOAT3(0.0f, 0.25f, 0.0f),
 		XMFLOAT3(1.2f, 1.0f, 1.3f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.37f, 0.2f, 2.7f),
