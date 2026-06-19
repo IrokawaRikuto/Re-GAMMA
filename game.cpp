@@ -106,10 +106,16 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		// faces). User: "光源で照らされている壁の方向にカメラを向けて".
 		ball.SetDirection(XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f));
 	}
-	else if (currentStage == STAGE_2 || currentStage == STAGE_3)
+	else if (currentStage == STAGE_2)
 	{
-		// TODO: revisit per-stage light direction when STAGE_2/3 are
-		// remade. Keep the existing ceiling spot for now.
+		// STAGE_2 mirrors STAGE_1 across X: the light sits on the -X side and
+		// the cone shines +X toward the +X shadow wall (x=24), which the camera
+		// also faces.
+		ball.SetDirection(XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+	}
+	else if (currentStage == STAGE_3)
+	{
+		// TODO: revisit STAGE_3 light direction when it is remade.
 		ball.SetDirection(XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f));
 	}
 

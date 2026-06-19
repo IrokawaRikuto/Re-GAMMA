@@ -32,6 +32,7 @@ void GameCamera_InitForStage()
     // player's spawn position instead of lerping from the previous map.
     StageSelect_Camera_Reset();
     StageOne_Camera_Reset();
+    StageTwo_Camera_Reset();
 }
 
 void GameCamera_Update()
@@ -51,7 +52,11 @@ void GameCamera_Update()
         {
             StageOne_Camera_Update();
         }
-        else if (st == STAGE_SELECT || st == STAGE_2)
+        else if (st == STAGE_2)
+        {
+            StageTwo_Camera_Update();
+        }
+        else if (st == STAGE_SELECT)
         {
             StageSelect_Camera_Update();
         }

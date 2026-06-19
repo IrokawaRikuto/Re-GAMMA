@@ -216,6 +216,7 @@ void SwitchLight_Update(void)
 			// transition so the hand-back is as smooth as the entry.
 			StageOne_Camera_BeginTransition(30);
 			StageSelect_Camera_BeginTransition(30);
+			StageTwo_Camera_BeginTransition(30);
 		}
 	}
 	g_TabWasDown = tabIsDown;
@@ -291,7 +292,15 @@ void SwitchLight_Update(void)
 			if (obj.pos.z < 2.0f)  obj.pos.z = 2.0f;
 			if (obj.pos.z > 21.0f) obj.pos.z = 21.0f;
 		}
-		else if (st == STAGE_SELECT || st == STAGE_2)
+			else if (st == STAGE_2)
+			{
+				// STAGE_2: light lives on the -X side (x~-1) and moves along Z.
+				if (obj.pos.x < -2.0f) obj.pos.x = -2.0f;
+				if (obj.pos.x > 14.0f) obj.pos.x = 14.0f;
+				if (obj.pos.z <  2.0f) obj.pos.z =  2.0f;
+				if (obj.pos.z > 31.0f) obj.pos.z = 31.0f;
+			}
+		else if (st == STAGE_SELECT)
 		{
 			if (obj.pos.x < 0.0f)  obj.pos.x = 0.0f;
 			if (obj.pos.x > 14.0f) obj.pos.x = 14.0f;

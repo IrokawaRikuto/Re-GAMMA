@@ -64,6 +64,9 @@ static int   gStageSelectCamTransFrames = 0;
 static float gStageOneCamZ    = 12.0f;
 static bool  gStageOneCamInit = false;
 static int   gStageOneCamTransFrames = 0;
+static float gStageTwoCamZ    = 12.0f;
+static bool  gStageTwoCamInit = false;
+static int   gStageTwoCamTransFrames = 0;
 
 // �}�E�X���x
 static float g_MouseSensYaw = 1.0f;
@@ -400,7 +403,19 @@ void LightCamera_Update()
 		g_CameraObject.Position   = XMFLOAT3(kCamX, kCamY, z);
 		g_CameraObject.AtPosition = XMFLOAT3(kAtX,  kAtY,  z);
 	}
-	else if (st == STAGE_SELECT || st == STAGE_2)
+	else if (st == STAGE_2)
+        {
+            // STAGE_2: light camera on the -X side looking +X (mirror of STAGE_1).
+            const float kCamX = -13.0f, kCamY = 6.5f;
+            const float kAtX  =  14.0f, kAtY  = 2.0f;
+            const float kZMin =   4.0f, kZMax = 30.0f;
+            float z = lightPos.z;
+            if (z < kZMin) z = kZMin;
+            if (z > kZMax) z = kZMax;
+            g_CameraObject.Position   = XMFLOAT3(kCamX, kCamY, z);
+            g_CameraObject.AtPosition = XMFLOAT3(kAtX,  kAtY,  z);
+        }
+        else if (st == STAGE_SELECT)
 	{
 		// StageSelect formula (camera at -Z side, X follows target).
 		const float kCamY = 3.5f, kCamZ = -7.5f;
@@ -664,6 +679,59 @@ void StageOne_Camera_BeginTransition(int frames)
 {
     if (frames < 0) frames = 0;
     gStageOneCamTransFrames = frames;
+}
+
+//---------------------------------------------------------------------------------------------------------
+// StageTwo camera: STAGE_2 mirrors STAGE_1 across X. The shadow wall is the
+// +X wall (x=24) and the light is on the -X side shining +X, so the camera
+// sits on the -X side and looks +X at the wall, following the player along Z.
+//---------------------------------------------------------------------------------------------------------
+void StageTwo_Camera_Update()
+{
+    const float kCamX = g_LightCameraMode ? -13.0f : -9.0f;  // camera on the -X side
+    const float kCamY = 6.5f;
+    const float kAtX  = 14.0f;                                // look +X toward the wall
+    const float kAtY  = 2.0f;
+    const float kZMin = 4.0f;
+    const float kZMax = 30.0f;
+    const float kFollowK = 0.08f;
+
+    XMFLOAT3 playerPos = GetPlayer3DPosition();
+    float targetZ = playerPos.z;
+    if (targetZ < kZMin) targetZ = kZMin;
+    if (targetZ > kZMax) targetZ = kZMax;
+
+    if (!gStageTwoCamInit) { gStageTwoCamZ = targetZ; gStageTwoCamInit = true; }
+    else gStageTwoCamZ += (targetZ - gStageTwoCamZ) * kFollowK;
+
+    XMFLOAT3 desiredPos = XMFLOAT3(kCamX, kCamY, gStageTwoCamZ);
+    XMFLOAT3 desiredAt  = XMFLOAT3(kAtX,  kAtY,  gStageTwoCamZ);
+
+    if (gStageTwoCamTransFrames > 0)
+    {
+        const float kTransLerp = 0.15f;
+        g_CameraObject.Position   = Lerp3(g_CameraObject.Position,   desiredPos, kTransLerp);
+        g_CameraObject.AtPosition = Lerp3(g_CameraObject.AtPosition, desiredAt,  kTransLerp);
+        --gStageTwoCamTransFrames;
+    }
+    else
+    {
+        g_CameraObject.Position   = desiredPos;
+        g_CameraObject.AtPosition = desiredAt;
+    }
+    g_CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
+}
+
+void StageTwo_Camera_Reset()
+{
+    gStageTwoCamInit = false;
+    gStageTwoCamZ    = 12.0f;
+}
+
+void StageTwo_Camera_BeginTransition(int frames)
+{
+    if (frames < 0) frames = 0;
+    gStageTwoCamTransFrames = frames;
 }
 
 void StageSelect_Camera_BeginTransition(int frames)
