@@ -106,6 +106,34 @@ int Seesaw_Create(float x, float y, float z, std::vector<MAPDATA>& mapData)
 }
 
 //=========================================================================================================
+// Rebind part indices into g_MapData after LoadMapFromFile's
+// MergeContiguousField pass, which erases/reorders entries and invalidates
+// the absolute indices captured in Seesaw_Create. Re-match each seesaw to the
+// nearest surviving FIELD_SEESAW_1 / FIELD_SEESAW_2 entry by position.
+//=========================================================================================================
+void Seesaw_RebindIndices()
+{
+    std::vector<MAPDATA>& mapData = GetFieldMap();
+    for (auto& s : g_Seesaws)
+    {
+        if (s.partIndices.size() < 2) continue;
+        int best1 = -1, best2 = -1;
+        float bd1 = 1e30f, bd2 = 1e30f;
+        for (int i = 0; i < (int)mapData.size(); ++i)
+        {
+            const MAPDATA& m = mapData[i];
+            if (m.no != FIELD_SEESAW_1 && m.no != FIELD_SEESAW_2) continue;
+            float dx = m.pos.x - s.pos.x, dy = m.pos.y - s.pos.y, dz = m.pos.z - s.pos.z;
+            float d2 = dx*dx + dy*dy + dz*dz;
+            if (m.no == FIELD_SEESAW_1 && d2 < bd1) { bd1 = d2; best1 = i; }
+            if (m.no == FIELD_SEESAW_2 && d2 < bd2) { bd2 = d2; best2 = i; }
+        }
+        if (best1 >= 0) s.partIndices[0] = best1;
+        if (best2 >= 0) s.partIndices[1] = best2;
+    }
+}
+
+//=========================================================================================================
 // éQè∆
 //=========================================================================================================
 

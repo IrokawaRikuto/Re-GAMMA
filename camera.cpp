@@ -62,6 +62,7 @@ static int   gStageSelectCamTransFrames = 0;
 // camera at +X side, looking toward -X wall illuminated by the light, follows
 // player along Z axis).
 static float gStageOneCamZ    = 12.0f;
+static float gStageOneCamAtY  = 3.0f;
 static bool  gStageOneCamInit = false;
 static int   gStageOneCamTransFrames = 0;
 
@@ -393,7 +394,7 @@ void LightCamera_Update()
 		// StageOne formula (camera at +X side, Z follows target).
 		const float kCamX = 22.0f, kCamY = 3.5f;
 		const float kAtX  =  6.0f, kAtY  = 3.0f;
-		const float kZMin =  4.0f, kZMax = 20.0f;
+		const float kZMin =  4.0f, kZMax = 28.0f;
 		float z = lightPos.z;
 		if (z < kZMin) z = kZMin;
 		if (z > kZMax) z = kZMax;
@@ -604,7 +605,7 @@ void StageOne_Camera_Update()
     const float kAtX   = 6.0f;
     const float kAtY   = 3.0f;
     const float kZMin     = 4.0f;
-    const float kZMax     = 20.0f;
+    const float kZMax     = 28.0f;
     const float kFollowK  = 0.08f;
 
     XMFLOAT3 playerPos = GetPlayer3DPosition();
@@ -633,8 +634,16 @@ void StageOne_Camera_Update()
         camXOfs = px * -0.20f;  // closer when player approaches camera
     }
 
+    // [FIX] Vertical follow: tilt the look-at toward the player's height so
+    // they stay framed -- low on the floor the camera tilts down to show them,
+    // high on the cliff top it tilts up. Smoothed like the Z follow.
+    float targetAtY = playerPos.y + 0.8f;
+    if (targetAtY < kAtY - 1.5f) targetAtY = kAtY - 1.5f;
+    if (targetAtY > kAtY + 2.5f) targetAtY = kAtY + 2.5f;
+    gStageOneCamAtY += (targetAtY - gStageOneCamAtY) * kFollowK;
+
     XMFLOAT3 desiredPos = XMFLOAT3(kCamX + camXOfs, kCamY, gStageOneCamZ);
-    XMFLOAT3 desiredAt  = XMFLOAT3(kAtX,             kAtY,  gStageOneCamZ);
+    XMFLOAT3 desiredAt  = XMFLOAT3(kAtX,             gStageOneCamAtY,  gStageOneCamZ);
 
     if (gStageOneCamTransFrames > 0)
     {

@@ -65,6 +65,7 @@ void Seesaw_Initialize();
 void Seesaw_Finalize();
 
 int  Seesaw_Create(float x, float y, float z, std::vector<MAPDATA>& mapData);
+void Seesaw_RebindIndices();   // re-resolve part indices after field merge
 void Seesaw_UpdateAll(float deltaTime);
 
 std::vector<SeesawData>& Seesaw_GetAll();

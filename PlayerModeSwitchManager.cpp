@@ -367,8 +367,8 @@ static bool GetSwitchTargetFromPlayer3D(SWITCH_TARGET* outT)
 			{
 				float cosA = (toPx.x*bl.Direction.x + toPx.y*bl.Direction.y +
 				              toPx.z*bl.Direction.z) / (lenPx * lenSp);
-				const float kSpotCosOuter = 0.83f; // keep in sync with shader
-				if (cosA < kSpotCosOuter) return false; // wall not lit -> no switch
+				const float kSpotCosLit = 0.88f; // fully-lit core (>= shader cosInner): dim/edge walls block
+				if (cosA < kSpotCosLit) return false; // wall not lit -> no switch
 			}
 		}
 	}

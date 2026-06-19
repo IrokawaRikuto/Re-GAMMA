@@ -584,9 +584,12 @@ void Player2D_Jump()
 			g_Player2D.Velocity.y += holdBonus;
 		}
 	}
-	else if (g_IsJumping && !jumpPressed && g_Player2D.Velocity.y > 0.0f)
+	else if (g_IsJumping && !jumpPressed)
 	{
-		g_Player2D.Velocity.y *= JUMP_CUT_MULTIPLIER;
+		// [FIX] Always release the jump latch on key-up, even while falling.
+		// The old Velocity.y>0 guard left g_IsJumping stuck true after a mid-air
+		// side hit, blocking all jumps until a 3D<->2D re-entry reset it.
+		if (g_Player2D.Velocity.y > 0.0f) g_Player2D.Velocity.y *= JUMP_CUT_MULTIPLIER;
 		g_IsJumping = false;
 	}
 

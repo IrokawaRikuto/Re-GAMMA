@@ -1030,6 +1030,10 @@ bool LoadMapFromFile(const char* filename)
 	if (!isMapTitle)
 	{
 		MergeContiguousField(FIELD_WALL);
+		// MergeContiguousField erases/reorders g_MapData, invalidating the
+		// absolute part indices Seesaw_Create stored. Re-resolve them so the
+		// seesaw board keeps a working collider (player can stand / tilt it).
+		Seesaw_RebindIndices();
 	}
 
 	file.close();

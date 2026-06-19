@@ -87,6 +87,16 @@ int Player2DField_Collision()
                 Field_GetCollisionHalfSize(map[i]), map[i].rotate.y, &push, &norm))
                 continue;
 
+            // [FIX] Side wall: flatten the normal Y so a horizontal push into
+            // a vertical face cannot leak into upward velocity (the 2D player
+            // was slowly climbing walls). Floors/ceilings keep their Y normal.
+            if (fabsf(norm.y) < 0.7f)
+            {
+                norm.y = 0.0f;
+                float nl = sqrtf(norm.x * norm.x + norm.z * norm.z);
+                if (nl > 1e-6f) { norm.x /= nl; norm.z /= nl; }
+            }
+
             if (fabsf(push.x) > 1e-8f || fabsf(push.y) > 1e-8f || fabsf(push.z) > 1e-8f)
             {
                 capsule.center = capsule.center + push;
@@ -582,6 +592,16 @@ static void Player2DField_VelocityClamp()
             if (!Resolve_Capsule2D_OBB(nextCap, map[i].pos,
                 Field_GetCollisionHalfSize(map[i]), map[i].rotate.y, &push, &norm))
                 continue;
+
+            // [FIX] Side wall: flatten the normal Y so a horizontal push into
+            // a vertical face cannot leak into upward velocity (the 2D player
+            // was slowly climbing walls). Floors/ceilings keep their Y normal.
+            if (fabsf(norm.y) < 0.7f)
+            {
+                norm.y = 0.0f;
+                float nl = sqrtf(norm.x * norm.x + norm.z * norm.z);
+                if (nl > 1e-6f) { norm.x /= nl; norm.z /= nl; }
+            }
 
             // Predicted overlap. `norm` points OUT of the box. Remove the
             // into-wall component of velocity so we land just at the surface.
