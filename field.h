@@ -44,6 +44,8 @@ enum FIELD
     FIELD_PORTAL_K,
     FIELD_PORTAL_J,
 
+    FIELD_SWITCH,   // momentary trigger that activates the manhole
+
 
     FIELD_MAX,
 };

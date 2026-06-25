@@ -37,6 +37,7 @@ static const ManholePartConfig MANHOLE_CONFIG =
 
 static std::vector<ManholeData> g_Manholes;
 static float g_TotalTime = 0.0f; // デバッグ/将来拡張用（全体時間）
+static bool  g_ManholeActivated = false; // switch starts the platform (one-way)
 
 //=========================================================================================================
 // 初期化 / 破棄
@@ -44,6 +45,7 @@ static float g_TotalTime = 0.0f; // デバッグ/将来拡張用（全体時間）
 
 void Manhole_Initialize()
 {
+    g_ManholeActivated = false;
     g_Manholes.clear();
     g_TotalTime = 0.0f;
 }
@@ -89,6 +91,28 @@ int Manhole_Create(float x, float y, float z, std::vector<MAPDATA>& mapData)
     return index;
 }
 
+void Manhole_Activate() { g_ManholeActivated = true; }
+
+// Rebind mapIndex after MergeContiguousField reorders g_MapData (same issue as
+// the seesaw). Match each manhole to the nearest FIELD_MANHOLE entry.
+void Manhole_RebindIndices()
+{
+    std::vector<MAPDATA>& mapData = GetFieldMap();
+    for (auto& m : g_Manholes)
+    {
+        int best = -1; float bd = 1e30f;
+        for (int i = 0; i < (int)mapData.size(); ++i)
+        {
+            if (mapData[i].no != FIELD_MANHOLE) continue;
+            float dx = mapData[i].pos.x - m.basePos.x;
+            float dz = mapData[i].pos.z - m.basePos.z;
+            float d2 = dx*dx + dz*dz;
+            if (d2 < bd) { bd = d2; best = i; }
+        }
+        if (best >= 0) m.mapIndex = best;
+    }
+}
+
 //=========================================================================================================
 // 参照
 //=========================================================================================================
@@ -118,6 +142,15 @@ static void UpdateSingleManhole(int index, float deltaTime)
 
     ManholeData& manhole = g_Manholes[index];
     ManholeParams& params = manhole.params;
+
+    if (!g_ManholeActivated)
+    {
+        // Not switched on yet: hold at the base (rest) position.
+        std::vector<MAPDATA>& md = GetFieldMap();
+        if (manhole.mapIndex >= 0 && manhole.mapIndex < (int)md.size())
+            md[manhole.mapIndex].pos.y = manhole.basePos.y;
+        return;
+    }
 
     // 位相更新（cos波）
     params.phase += params.speed * deltaTime;

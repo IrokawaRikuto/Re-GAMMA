@@ -1,4 +1,5 @@
 #include "Player3D.h"
+#include "FieldManhole.h"
 #include "PlayerStatus.h"
 #include "Keyboard.h"
 #include "Camera.h"
@@ -800,6 +801,12 @@ void Player3D_CheckGoal()
 		return;
 	}
 
+
+	if (hit.type == FIELD_SWITCH)
+	{
+		Manhole_Activate();   // one-way: starts the up/down platform, never stops
+		return;
+	}
 
 	if (hit.type == FIELD_GOAL)
 	{

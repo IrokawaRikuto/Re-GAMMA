@@ -941,6 +941,7 @@ bool LoadMapFromFile(const char* filename)
 			case '9': type = FIELD_STAGE_3;    break;
 			case 'K': type = FIELD_PORTAL_K;    break;
 			case 'J': type = FIELD_PORTAL_J;    break;
+			case 'X': type = FIELD_SWITCH;    break;
 
 			case '.': valid = false;         break;
 			case ' ': valid = false;         break;
@@ -1034,6 +1035,7 @@ bool LoadMapFromFile(const char* filename)
 		// absolute part indices Seesaw_Create stored. Re-resolve them so the
 		// seesaw board keeps a working collider (player can stand / tilt it).
 		Seesaw_RebindIndices();
+		Manhole_RebindIndices();
 	}
 
 	file.close();

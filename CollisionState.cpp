@@ -105,6 +105,7 @@ bool Field_IsTrigger(FIELD t)
     case FIELD_PORTAL_J:
 
 	case FIELD_FOUNTAIN:
+    case FIELD_SWITCH:
         return true;
     default:
         return false;

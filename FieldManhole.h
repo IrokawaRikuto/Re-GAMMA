@@ -51,6 +51,8 @@ void Manhole_Initialize();
 void Manhole_Finalize();
 
 int  Manhole_Create(float x, float y, float z, std::vector<MAPDATA>& mapData);
+void Manhole_Activate();        // switch turns the platform on (one-way)
+void Manhole_RebindIndices();   // re-resolve mapIndex after field merge
 
 void Manhole_UpdateAll(float deltaTime);
 
