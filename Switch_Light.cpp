@@ -217,6 +217,7 @@ void SwitchLight_Update(void)
 			StageOne_Camera_BeginTransition(30);
 			StageSelect_Camera_BeginTransition(30);
 			StageTwo_Camera_BeginTransition(30);
+			StageThree_Camera_BeginTransition(30);
 		}
 	}
 	g_TabWasDown = tabIsDown;
@@ -299,6 +300,14 @@ void SwitchLight_Update(void)
 				if (obj.pos.x > 14.0f) obj.pos.x = 14.0f;
 				if (obj.pos.z <  2.0f) obj.pos.z =  2.0f;
 				if (obj.pos.z > 31.0f) obj.pos.z = 31.0f;
+			}
+			else if (st == STAGE_3)
+			{
+				// STAGE_3 vertical climb: light moves in Z (and Y via numpad).
+				if (obj.pos.x <  2.0f) obj.pos.x =  2.0f;
+				if (obj.pos.x > 10.0f) obj.pos.x = 10.0f;
+				if (obj.pos.z <  1.0f) obj.pos.z =  1.0f;
+				if (obj.pos.z >  8.0f) obj.pos.z =  8.0f;
 			}
 		else if (st == STAGE_SELECT)
 		{

@@ -33,6 +33,7 @@ void GameCamera_InitForStage()
     StageSelect_Camera_Reset();
     StageOne_Camera_Reset();
     StageTwo_Camera_Reset();
+    StageThree_Camera_Reset();
 }
 
 void GameCamera_Update()
@@ -59,6 +60,10 @@ void GameCamera_Update()
         else if (st == STAGE_SELECT)
         {
             StageSelect_Camera_Update();
+        }
+        else if (st == STAGE_3)
+        {
+            StageThree_Camera_Update();
         }
         else
         {

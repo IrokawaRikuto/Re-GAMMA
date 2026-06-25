@@ -115,8 +115,9 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 	else if (currentStage == STAGE_3)
 	{
-		// TODO: revisit STAGE_3 light direction when it is remade.
-		ball.SetDirection(XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f));
+		// STAGE_3 vertical climb uses STAGE_1's convention: light on the +X
+		// side shining -X toward the -X shadow wall (which the camera faces).
+		ball.SetDirection(XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f));
 	}
 
 	if      (currentStage == STAGE_1) LoadMapFromFile("asset\\MapData\\stage1.txt");

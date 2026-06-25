@@ -67,6 +67,10 @@ static int   gStageOneCamTransFrames = 0;
 static float gStageTwoCamZ    = 12.0f;
 static bool  gStageTwoCamInit = false;
 static int   gStageTwoCamTransFrames = 0;
+static float gStage3CamY = 0.0f;
+static float gStage3CamZ = 5.0f;
+static bool  gStage3CamInit = false;
+static int   gStage3CamTransFrames = 0;
 
 // �}�E�X���x
 static float g_MouseSensYaw = 1.0f;
@@ -427,6 +431,17 @@ void LightCamera_Update()
 		g_CameraObject.Position   = XMFLOAT3(x, kCamY, kCamZ);
 		g_CameraObject.AtPosition = XMFLOAT3(x, kAtY,  kAtZ);
 	}
+		else if (st == STAGE_3)
+		{
+			// STAGE_3 vertical climb: light camera looks -X, follows the light Y/Z.
+			const float kCamX = 16.0f, kAtX = 1.0f;
+			float camY = lightPos.y + 2.0f;
+			float camZ = lightPos.z;
+			if (camZ < 3.0f) camZ = 3.0f;
+			if (camZ > 6.0f) camZ = 6.0f;
+			g_CameraObject.Position   = XMFLOAT3(kCamX, camY, camZ);
+			g_CameraObject.AtPosition = XMFLOAT3(kAtX,  camY, camZ);
+		}
 	else
 	{
 		// STAGE_3 etc: TPS-style around the light. Distance / angle match
@@ -732,6 +747,57 @@ void StageTwo_Camera_BeginTransition(int frames)
 {
     if (frames < 0) frames = 0;
     gStageTwoCamTransFrames = frames;
+}
+
+//---------------------------------------------------------------------------------------------------------
+// StageThree camera: STAGE_3 is a vertical climb. Camera on the +X side looks
+// -X at the shadow wall and follows the player's HEIGHT (Y) and Z. The look
+// point sits a bit above the player so the next ledge is visible.
+//---------------------------------------------------------------------------------------------------------
+void StageThree_Camera_Update()
+{
+    const float kCamX = g_LightCameraMode ? 16.0f : 13.0f;
+    const float kAtX  = 1.0f;
+    const float kLookUp = 2.0f;
+    const float kFollowK = 0.10f;
+
+    XMFLOAT3 p = GetPlayer3DPosition();
+    float targetY = p.y + kLookUp;
+    float targetZ = p.z;
+    if (targetZ < 3.0f) targetZ = 3.0f;
+    if (targetZ > 6.0f) targetZ = 6.0f;
+
+    if (!gStage3CamInit) { gStage3CamY = targetY; gStage3CamZ = targetZ; gStage3CamInit = true; }
+    else { gStage3CamY += (targetY - gStage3CamY) * kFollowK;
+           gStage3CamZ += (targetZ - gStage3CamZ) * kFollowK; }
+
+    XMFLOAT3 desiredPos = XMFLOAT3(kCamX, gStage3CamY, gStage3CamZ);
+    XMFLOAT3 desiredAt  = XMFLOAT3(kAtX,  gStage3CamY, gStage3CamZ);
+
+    if (gStage3CamTransFrames > 0)
+    {
+        const float kTransLerp = 0.15f;
+        g_CameraObject.Position   = Lerp3(g_CameraObject.Position,   desiredPos, kTransLerp);
+        g_CameraObject.AtPosition = Lerp3(g_CameraObject.AtPosition, desiredAt,  kTransLerp);
+        --gStage3CamTransFrames;
+    }
+    else
+    {
+        g_CameraObject.Position   = desiredPos;
+        g_CameraObject.AtPosition = desiredAt;
+    }
+    g_CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
+}
+
+void StageThree_Camera_Reset()
+{
+    gStage3CamInit = false; gStage3CamY = 0.0f; gStage3CamZ = 5.0f;
+}
+
+void StageThree_Camera_BeginTransition(int frames)
+{
+    if (frames < 0) frames = 0;
+    gStage3CamTransFrames = frames;
 }
 
 void StageSelect_Camera_BeginTransition(int frames)
