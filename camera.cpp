@@ -398,7 +398,7 @@ void LightCamera_Update()
 	if (st == STAGE_1)
 	{
 		// StageOne formula (camera at +X side, Z follows target).
-		const float kCamX = 22.0f, kCamY = 3.5f;
+		const float kCamX = 19.0f, kCamY = 3.5f;
 		const float kAtX  =  6.0f, kAtY  = 3.0f;
 		const float kZMin =  4.0f, kZMax = 31.0f;
 		float z = lightPos.z;
@@ -410,7 +410,7 @@ void LightCamera_Update()
 	else if (st == STAGE_2)
         {
             // STAGE_2: light camera on the -X side looking +X (mirror of STAGE_1).
-            const float kCamX = -13.0f, kCamY = 6.5f;
+            const float kCamX = -7.0f, kCamY = 6.5f;
             const float kAtX  =  14.0f, kAtY  = 2.0f;
             const float kZMin =   4.0f, kZMax = 30.0f;
             float z = lightPos.z;
@@ -434,7 +434,7 @@ void LightCamera_Update()
 		else if (st == STAGE_3)
 		{
 			// STAGE_3 vertical climb: light camera looks -X, follows the light Y/Z.
-			const float kCamX = 16.0f, kAtX = 1.0f;
+			const float kCamX = 13.0f, kAtX = 1.0f;
 			float camY = lightPos.y + 2.0f;
 			float camZ = lightPos.z;
 			if (camZ < 3.0f) camZ = 3.0f;
@@ -629,7 +629,7 @@ void StageOne_Camera_Update()
     // Light mode keeps the original wide framing. Player mode pulls the
     // camera in (smaller kCamX) and lightly tracks player.x so the depth
     // axis moves a bit as the player walks toward / away from the wall.
-    const float kCamX  = g_LightCameraMode ? 22.0f : 18.0f;
+    const float kCamX  = g_LightCameraMode ? 19.0f : 16.0f;
     const float kCamY  = 6.5f;
     const float kAtX   = 6.0f;
     const float kAtY   = 2.0f;
@@ -703,7 +703,7 @@ void StageOne_Camera_BeginTransition(int frames)
 //---------------------------------------------------------------------------------------------------------
 void StageTwo_Camera_Update()
 {
-    const float kCamX = g_LightCameraMode ? -13.0f : -9.0f;  // camera on the -X side
+    const float kCamX = g_LightCameraMode ? -7.0f : -3.0f;  // camera on the -X side
     const float kCamY = 6.5f;
     const float kAtX  = 14.0f;                                // look +X toward the wall
     const float kAtY  = 2.0f;
@@ -756,7 +756,7 @@ void StageTwo_Camera_BeginTransition(int frames)
 //---------------------------------------------------------------------------------------------------------
 void StageThree_Camera_Update()
 {
-    const float kCamX = g_LightCameraMode ? 16.0f : 13.0f;
+    const float kCamX = g_LightCameraMode ? 13.0f : 10.0f;
     const float kAtX  = 1.0f;
     const float kLookUp = 2.0f;
     const float kFollowK = 0.10f;
