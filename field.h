@@ -72,6 +72,8 @@ public:
     XMFLOAT3 colliderHalf;
     bool useCustomCollider;
 
+    float fallVelY = 0.0f;   // box gravity: straight downward fall velocity (no rotation)
+
     MAPDATA()
         : pos{ 0, 0, 0 }
         , no(FIELD_GROUND)

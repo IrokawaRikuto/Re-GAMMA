@@ -319,6 +319,75 @@ void field_Finalize(void)
 //=========================================================================================================
 // �X�V
 //=========================================================================================================
+// Box gravity: FIELD_OBJ_BOX cells fall straight down (no rotation) until they
+// rest on a solid surface or another box. STAGE_2 drops boxes off ledges to
+// build a 3-box bridge to the goal. Velocity is stored per-cell in MAPDATA.fallVelY.
+static bool IsBoxSupport(FIELD t)
+{
+    switch (t)
+    {
+    case FIELD_GROUND:
+    case FIELD_WALL:
+    case FIELD_EMPTY_BOX:
+    case FIELD_OBJ_BOX:
+    case FIELD_MANHOLE:
+    case FIELD_SEESAW_1:
+    case FIELD_SEESAW_2:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static void Box_UpdateGravity()
+{
+    const float kGrav    = 9.8f / 600.0f * 0.5f;  // ~0.0082, matches player gravity
+    const float kMaxFall = 0.5f;
+    for (size_t i = 0; i < g_MapData.size(); ++i)
+    {
+        MAPDATA& box = g_MapData[i];
+        if (box.no != FIELD_OBJ_BOX) continue;
+
+        const XMFLOAT3 bh = Field_GetCollisionHalfSize(box);
+        const float boxBottom = box.pos.y - bh.y;
+
+        // Highest support top directly below the box (box center over it).
+        float supportTop = -1000.0f;
+        for (size_t j = 0; j < g_MapData.size(); ++j)
+        {
+            if (j == i) continue;
+            const MAPDATA& o = g_MapData[j];
+            if (!IsBoxSupport(o.no)) continue;
+            const XMFLOAT3 oh = Field_GetCollisionHalfSize(o);
+            if (std::fabs(box.pos.x - o.pos.x) > oh.x + 0.05f) continue;
+            if (std::fabs(box.pos.z - o.pos.z) > oh.z + 0.05f) continue;
+            const float oTop = o.pos.y + oh.y;
+            if (oTop <= boxBottom + 0.05f && oTop > supportTop) supportTop = oTop;
+        }
+
+        if (boxBottom > supportTop + 0.02f)
+        {
+            box.fallVelY -= kGrav;
+            if (box.fallVelY < -kMaxFall) box.fallVelY = -kMaxFall;
+            if (boxBottom + box.fallVelY <= supportTop)   // would pass through -> land
+            {
+                box.pos.y = supportTop + bh.y;
+                box.fallVelY = 0.0f;
+            }
+            else
+            {
+                box.pos.y += box.fallVelY;
+            }
+        }
+        else
+        {
+            box.fallVelY = 0.0f;
+            if (supportTop > -999.0f) box.pos.y = supportTop + bh.y;  // rest exactly
+        }
+        box.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);  // straight fall, no rotation
+    }
+}
+
 void field_Update(void)
 {
 	DEBUG_IMGUI_BEGIN({
@@ -334,6 +403,7 @@ void field_Update(void)
 	const float deltaTime = 1.0f / 60.0f;
 	Seesaw_UpdateAll(deltaTime);
 	Manhole_UpdateAll(deltaTime);
+	Box_UpdateGravity();
 	Fountain_UpdateAll(deltaTime);
 
 

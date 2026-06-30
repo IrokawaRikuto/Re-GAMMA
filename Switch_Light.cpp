@@ -185,7 +185,10 @@ void SwitchLight_Update(void)
 	// [FIX] Also swallow during any active fade so the player cannot enter or
 	// leave light mode mid-transition.
 	if (StageClearCinematic_IsActive()) tabIsDown = false;
+	// STAGE_2 is a fixed-light stage: the light cannot be moved, so disable
+	// the TAB light-control mode entirely there (the 3D<->2D Change still works).
 	if (Input_IsGloballyLocked()) tabIsDown = false;
+	if (GetCurrentStage() == STAGE_2) tabIsDown = false;
 	if (tabIsDown && !g_TabWasDown)
 	{
 		g_LightMode = !g_LightMode;
