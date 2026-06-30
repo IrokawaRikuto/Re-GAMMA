@@ -1,32 +1,36 @@
-# Stage 2 Map  (from sketch: switch+manhole platformer with box shadows)
-# B=Box, W=Wall, G=Ground, .=Empty, S=seesaw, R=Spawn, 1=Goal, 3=Light(movable,TAB)
-# M=Manhole(up/down platform, starts OFF), X=Switch(step on it to start the manhole)
+# Stage 2 Map  (from sketch + solution: fixed light, box-drop bridge)
+# B=Box(falls, no rotation), W=Wall, G=Ground, .=Empty, S=seesaw, R=Spawn, 1=Goal
+# 3=Light(FIXED in stage2), M=Manhole(up/down, starts OFF), X=Switch(starts manhole)
 # world_x = col-2 ; world_z = row ; world_y = (the Y=N below) - 1
-# STAGE_2 orientation: back wall = +X col 19 (shadow screen), camera on -X looks +X,
-# light on the -X side shines +X. Player progresses high-Z (right start) -> low-Z
-# (left goal): use seesaw/boxes + light for shadows, hit the switch to start the
-# manhole, ride it. FIRST-CUT from the sketch -- positions need playtest tuning.
+# Orientation: +X col19 = shadow wall, camera -X looks +X, light on -X shines +X.
+# Solution: push box1 -> climb right high platform (z16-20) -> ride seesaw, 2D on its
+# shadow up to the mid-upper platform (z11-14) -> hit switch, drop box2 -> manhole
+# (z23) starts; ride its shadow up to the upper-right platform (z24-27), drop box3 ->
+# push all 3 boxes into the trench (z4-6) to bridge to the goal (z2). 2 boxes won't
+# fill it. FIRST-CUT positions -- shadow climbs + trench width need playtest tuning.
 
 # Layer Y=0 (floor)
 ....................
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
-....GGGGGGGGGGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+............GGGGGGG.
+....................
+....................
+....................
+....................
+....................
 ....................
 ....................
 ....................
@@ -37,39 +41,40 @@
 ....................
 ....................
 
-# Layer Y=1 (world y=0)
+# Layer Y=1 (y=0)
 WWWWWWWWWWWWWWWWWWWW
-...................W
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
 ............GGGGGGGW
 ............GGGGGGGW
 ............GGGGGGGW
 ...................W
 ...................W
 ...................W
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
 ...................W
 ...................W
 ...................W
 ...................W
 ...................W
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
+...................W
+...................W
+...................W
 WWWWWWWWWWWWWWWWWWWW
 
-# Layer Y=2 (world y=1)
+# Layer Y=2 (y=1)
 WWWWWWWWWWWWWWWWWWWW
-...................W
 ...................W
 ...............1...W
 ...................W
@@ -77,27 +82,30 @@ WWWWWWWWWWWWWWWWWWWW
 ...................W
 ...................W
 ...................W
+...................W
+...................W
+...............R...W
+...................W
 ...............B...W
 ...................W
 ...................W
 ...................W
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
+............GGGGGGGW
 ...................W
 ...................W
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
 ...................W
 ...................W
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
+...................W
+...................W
+...................W
+...................W
 WWWWWWWWWWWWWWWWWWWW
 
-# Layer Y=3 (world y=2)
+# Layer Y=3 (y=2)
 WWWWWWWWWWWWWWWWWWWW
 ...................W
 ...................W
@@ -114,20 +122,22 @@ WWWWWWWWWWWWWWWWWWWW
 ...................W
 ...................W
 ...................W
-...................W
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
-............GGGGGGGW
 ............GGGGGGGW
 ............GGGGGGGW
 ..3.........GGGGGGGW
 ............GGGGGGGW
 ............GGGGGGGW
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
 WWWWWWWWWWWWWWWWWWWW
 
-# Layer Y=4 (world y=3)
+# Layer Y=4 (y=3)
 WWWWWWWWWWWWWWWWWWWW
 ...................W
 ...................W
@@ -137,10 +147,6 @@ WWWWWWWWWWWWWWWWWWWW
 ...................W
 ...................W
 ...................W
-............GGGGGG.W
-............GGGGGG.W
-............GGGGGG.W
-............GGGGGG.W
 ...................W
 ...................W
 ...................W
@@ -149,63 +155,7 @@ WWWWWWWWWWWWWWWWWWWW
 ...................W
 ...................W
 ...................W
-.................B.W
 ...............S...W
-...................W
-...............R...W
-...................W
-...................W
-WWWWWWWWWWWWWWWWWWWW
-
-# Layer Y=5 (world y=4)
-WWWWWWWWWWWWWWWWWWWW
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...............B...W
-..............X....W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-WWWWWWWWWWWWWWWWWWWW
-
-# Layer Y=6 (world y=5)
-WWWWWWWWWWWWWWWWWWWW
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-............GGGGGG.W
-............GGGGGG.W
-............GGGGGG.W
-............GGGGGG.W
-...................W
 ...................W
 ...................W
 ...................W
@@ -215,10 +165,87 @@ WWWWWWWWWWWWWWWWWWWW
 ...................W
 ...................W
 ...................W
+...................W
+...................W
 WWWWWWWWWWWWWWWWWWWW
 
-# Layer Y=7 (world y=6)
+# Layer Y=5 (y=4)
 WWWWWWWWWWWWWWWWWWWW
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+............GGGGGG.W
+............GGGGGG.W
+............GGGGGG.W
+............GGGGGG.W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+WWWWWWWWWWWWWWWWWWWW
+
+# Layer Y=6 (y=5)
+WWWWWWWWWWWWWWWWWWWW
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+..............X....W
+...............B...W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+............GGGGGG.W
+............GGGGGG.W
+............GGGGGG.W
+............GGGGGG.W
+...................W
+WWWWWWWWWWWWWWWWWWWW
+
+# Layer Y=7 (y=6)
+WWWWWWWWWWWWWWWWWWWW
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
+...................W
 ...................W
 ...................W
 ...................W
@@ -236,19 +263,12 @@ WWWWWWWWWWWWWWWWWWWW
 ...................W
 ...................W
 ...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
-...................W
 WWWWWWWWWWWWWWWWWWWW
 
-# Layer Y=8 (world y=7)
+# Layer Y=8 (y=7)
 WWWWWWWWWWWWWWWWWWWW
+...................W
+...................W
 ...................W
 ...................W
 ...................W
@@ -277,8 +297,10 @@ WWWWWWWWWWWWWWWWWWWW
 ...................W
 WWWWWWWWWWWWWWWWWWWW
 
-# Layer Y=9 (world y=8)
+# Layer Y=9 (y=8)
 WWWWWWWWWWWWWWWWWWWW
+...................W
+...................W
 ...................W
 ...................W
 ...................W
